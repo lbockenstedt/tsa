@@ -20,8 +20,8 @@ REPO="${REPO:-lbockenstedt/tsa}"
 BRANCH="${BRANCH:-main}"
 DB_NAME="${DB_NAME:-tsa}"
 DB_USER="${DB_USER:-tsa}"
-DB_PASS="${DB_PASS:-tsa_$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c16)}"
-JWT_SECRET="${JWT_SECRET:-$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c40)}"
+DB_PASS="${DB_PASS:-tsa_$(head -c 512 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | cut -c1-16)}"
+JWT_SECRET="${JWT_SECRET:-$(head -c 512 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | cut -c1-40)}"
 APP_PORT="${APP_PORT:-3001}"
 APP_BASE_URL="${APP_BASE_URL:-http://localhost:${APP_PORT}}"
 
@@ -114,7 +114,7 @@ systemctl restart tsa
 log "Waiting for the service to come up…"
 for _ in $(seq 1 20); do
   if curl -fsS "http://127.0.0.1:${APP_PORT}/api/health" >/dev/null 2>&1; then
-    IP="$(ip -4 -o addr show eth0 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1 || true)"
+    IP="$(ip -4 -o addr show eth0 2>/dev/null | awk -F'[ /]+' 'NR==1{print $4}')"
     cat <<EOF
 
 \033[1;32m✔ TSA is up.\033[0m

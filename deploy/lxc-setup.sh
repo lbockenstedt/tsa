@@ -11,8 +11,8 @@ export DEBIAN_FRONTEND=noninteractive
 APP_DIR="/opt/tsa"
 DB_NAME="tsa"
 DB_USER="tsa"
-DB_PASS="${DB_PASS:-tsa_$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c16)}"
-JWT_SECRET="${JWT_SECRET:-$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c40)}"
+DB_PASS="${DB_PASS:-tsa_$(head -c 512 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | cut -c1-16)}"
+JWT_SECRET="${JWT_SECRET:-$(head -c 512 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | cut -c1-40)}"
 APP_PORT="${APP_PORT:-3001}"
 
 log() { printf '\n\033[1;34m▶ %s\033[0m\n' "$*"; }

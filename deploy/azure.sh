@@ -25,13 +25,13 @@ REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 RESOURCE_GROUP="${RESOURCE_GROUP:-tsa-rg}"
 LOCATION="${LOCATION:-eastus}"
 NAME_PREFIX="${NAME_PREFIX:-tsa}"
-ACR_NAME="${ACR_NAME:-${NAME_PREFIX}acr$(LC_ALL=C tr -dc a-z0-9 </dev/urandom | head -c5)}"
+ACR_NAME="${ACR_NAME:-${NAME_PREFIX}acr$(head -c 256 /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | cut -c1-5)}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 DB_ADMIN_USER="${DB_ADMIN_USER:-tsaadmin}"
 
 # Generate strong secrets if not supplied.
-DB_ADMIN_PASSWORD="${DB_ADMIN_PASSWORD:-$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c24)}"
-JWT_SECRET="${JWT_SECRET:-$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c40)}"
+DB_ADMIN_PASSWORD="${DB_ADMIN_PASSWORD:-$(head -c 512 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | cut -c1-24)}"
+JWT_SECRET="${JWT_SECRET:-$(head -c 512 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | cut -c1-40)}"
 
 SMTP_HOST="${SMTP_HOST:-}"
 SMTP_USER="${SMTP_USER:-}"
