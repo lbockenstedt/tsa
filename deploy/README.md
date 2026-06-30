@@ -18,6 +18,12 @@ curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/install.sh | 
 curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/install.sh | bash -s -- proxmox
 ```
 
+**Inside an existing LXC container** (any Debian 12 LXC — Proxmox, incus, LXC).
+From a root shell inside the container (`pct enter <vmid>`, `lxc-attach`, or ssh):
+```bash
+curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/deploy/lxc-install.sh | bash
+```
+
 Overrides pass through as env vars, e.g.:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/install.sh \
