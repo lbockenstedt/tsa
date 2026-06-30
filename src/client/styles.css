@@ -1,0 +1,220 @@
+/* TSA — styling modeled on tsaweb.org (Technology Student Association).
+   Navy primary, red accent, light-gray sections, white cards, dark footer.
+   Bootstrap-ish spacing + a 1200px content grid. */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Brand */
+  --tsa-blue: #003e7e;        /* primary navy */
+  --tsa-blue-dark: #002a57;
+  --tsa-blue-light: #1456a3;
+  --tsa-red: #ed1c24;         /* accent crimson */
+  --tsa-red-dark: #c8161c;
+
+  /* Neutrals */
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --section-alt: #eef2f7;
+  --ink: #1f2933;
+  --muted: #5b6b7b;
+  --border: #dce3ec;
+
+  /* Feedback */
+  --ok: #16a34a;
+  --ok-bg: #ecfdf5;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0, 62, 126, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --maxw: 1200px;
+  --font-head: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-body: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-head);
+  color: var(--tsa-blue);
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+h1 { font-size: 1.9rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.2rem; }
+a { color: var(--tsa-blue-light); text-decoration: none; }
+a:hover { color: var(--tsa-red); text-decoration: underline; }
+
+/* ---------- Top utility bar (thin, like tsaweb's login row) ---------- */
+.utility-bar {
+  background: var(--tsa-blue-dark);
+  color: #cfdcec;
+  font-size: 0.8rem;
+}
+.utility-bar .container {
+  display: flex; justify-content: flex-end; gap: 1.25rem; padding: 0.3rem 1rem;
+}
+.utility-bar a { color: #fff; text-decoration: none; }
+.utility-bar a:hover { color: #ffd2d4; text-decoration: underline; }
+
+/* ---------- Main nav ---------- */
+.navbar {
+  background: var(--tsa-blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1rem;
+  min-height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.navbar .brand {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-decoration: none;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.navbar .brand .dot { color: var(--tsa-red); }
+.navbar .brand:hover { text-decoration: none; color: #fff; }
+.nav-links { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; width: 100%; }
+.nav-links a {
+  color: #e8eef6;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: var(--font-head);
+  padding: 0.25rem 0;
+  border-bottom: 3px solid transparent;
+}
+.nav-links a:hover { color: #fff; border-bottom-color: var(--tsa-red); text-decoration: none; }
+.nav-links a.active { color: #fff; border-bottom-color: var(--tsa-red); }
+.nav-links .spacer { flex: 1; }
+.nav-links .who { color: #cfdcec; font-size: 0.85rem; font-family: var(--font-body); }
+
+/* Buttons in the nav */
+.nav-links button {
+  background: var(--tsa-red);
+  border: none;
+  color: #fff;
+  font-family: var(--font-head);
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.nav-links button:hover { background: var(--tsa-red-dark); }
+
+/* ---------- Layout ---------- */
+.container { max-width: var(--maxw); margin: 0 auto; padding: 1.75rem 1rem 3rem; }
+.centered { text-align: center; padding: 2rem; }
+.subtle { color: var(--muted); }
+
+/* ---------- Buttons / inputs ---------- */
+button, input, select, textarea {
+  font: inherit;
+  font-family: var(--font-body);
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+}
+button {
+  cursor: pointer;
+  background: var(--tsa-blue);
+  color: #fff;
+  border: none;
+  font-family: var(--font-head);
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+button:hover { background: var(--tsa-blue-light); }
+button.secondary { background: var(--panel); color: var(--tsa-blue); border: 1px solid var(--tsa-blue); }
+button.secondary:hover { background: var(--tsa-blue); color: #fff; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.9rem; font-weight: 600; color: var(--ink); }
+label .hint { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--tsa-blue-light); outline-offset: 1px; }
+
+/* ---------- Cards / panels ---------- */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1.25rem;
+}
+.card h3 { margin-top: 0; }
+.card .meta { color: var(--muted); font-size: 0.85rem; }
+a.card { display: block; text-decoration: none; color: inherit; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+a.card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 62, 126, 0.14); text-decoration: none; }
+a.card:hover h3 { color: var(--tsa-blue-light); }
+
+/* ---------- Tables ---------- */
+table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: var(--radius); overflow: hidden; }
+th, td { text-align: left; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border); }
+th { background: var(--tsa-blue); color: #fff; font-family: var(--font-head); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+tbody tr:hover { background: var(--section-alt); }
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-block; padding: 0.12rem 0.55rem; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 600; background: #e6edf6; color: var(--tsa-blue);
+}
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.warn { background: var(--warn-bg); color: var(--warn); }
+.badge.danger { background: var(--danger-bg); color: var(--danger); }
+
+/* ---------- Helpers ---------- */
+.row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 0.6rem; }
+.error { color: var(--danger); background: var(--danger-bg); padding: 0.5rem 0.75rem; border-radius: var(--radius); margin: 0.5rem 0; }
+.muted-btn-row { margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+ul.slots { list-style: none; padding: 0; margin: 0; }
+ul.slots li { padding: 0.5rem 0; border-bottom: 1px dashed var(--border); }
+
+/* ---------- Hero (used on the events listing) ---------- */
+.hero {
+  background: linear-gradient(135deg, var(--tsa-blue) 0%, var(--tsa-blue-light) 100%);
+  color: #fff;
+  padding: 2.5rem 1rem;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.hero h1 { color: #fff; margin-bottom: 0.25rem; }
+.hero p { margin: 0; opacity: 0.9; max-width: 60ch; }
+
+/* ---------- Footer ---------- */
+.footer {
+  background: var(--tsa-blue-dark);
+  color: #cfdcec;
+  padding: 1.75rem 1rem 1.25rem;
+  font-size: 0.85rem;
+}
+.footer .container { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; padding-top: 0; padding-bottom: 0; }
+.footer .brand { font-family: var(--font-head); font-weight: 800; color: #fff; font-size: 1.05rem; }
+.footer .brand .dot { color: var(--tsa-red); }
+.footer a { color: #fff; }
+.footer .muted { color: #8fa3bd; }

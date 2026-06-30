@@ -1,0 +1,161 @@
+// TSA — Prisma schema for a competition signup platform.
+// Generator and datasource for PostgreSQL (Azure Database for PostgreSQL Flexible Server in prod).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// A person who can log in. role determines what they can do.
+enum Role {
+  ADMIN      // organizer: create/manage events, run assignment, view results
+  JUDGE      // signs up to judge, enters scores
+  COMPETITOR // signs up to compete, picks a slot
+  CHECKIN    // day-of check-in volunteer (UI deferred)
+}
+
+// Lifecycle of an event.
+enum EventStatus {
+  OPEN       // signups being accepted
+  CLOSED     // signups closed, ready for assignment
+  ASSIGNED   // auto-assignment has run
+  SCORED     // judges have entered scores
+  FINALIZED  // results computed and published
+}
+
+// A signup can be either to judge or to compete.
+enum SignupRole {
+  JUDGE
+  COMPETITOR
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         Role       @default(COMPETITOR)
+  createdAt    DateTime   @default(now())
+
+  signups     Signup[]
+  assignments Assignment[] @relation("AssignmentCompetitor")
+  judgeFor    Assignment[] @relation("AssignmentJudge")
+  scores      Score[]
+  results     Result[]
+}
+
+model Event {
+  id            Int          @id @default(autoincrement())
+  name          String
+  description   String       @default("")
+  location      String       @default("")
+  startsAt      DateTime
+  endsAt        DateTime
+  signupClosesAt DateTime
+  status        EventStatus  @default(OPEN)
+  createdAt     DateTime     @default(now())
+
+  rubric    Rubric?
+  timeSlots TimeSlot[]
+  signups   Signup[]
+  assignments Assignment[]
+  results   Result[]
+}
+
+// A 1:1 rubric: list of scored criteria, each with a max score and weight.
+model Rubric {
+  id       Int      @id @default(autoincrement())
+  eventId  Int      @unique
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  // Json array of { name: string, maxScore: number, weight: number }
+  criteria Json
+}
+
+// A bookable time slot within an event, in a specific room, with a competitor capacity.
+model TimeSlot {
+  id        Int      @id @default(autoincrement())
+  eventId   Int
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  startsAt  DateTime
+  endsAt    DateTime
+  capacity  Int      @default(1) // max competitors in this slot/room
+  room      String   @default("Main")
+
+  signups     Signup[]
+  assignments Assignment[]
+
+  @@index([eventId])
+}
+
+// Someone signed up for an event as a judge or competitor.
+// Competitors pick a time slot at signup; judges do not (they're assigned later).
+model Signup {
+  id         Int        @id @default(autoincrement())
+  eventId    Int
+  event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       SignupRole
+  timeSlotId Int?
+  timeSlot   TimeSlot?  @relation(fields: [timeSlotId], references: [id], onDelete: SetNull)
+  createdAt  DateTime   @default(now())
+
+  // Prevent double-signup for the same role in the same event.
+  @@unique([eventId, userId, role])
+  @@index([eventId, role])
+}
+
+// A finalized placement produced by the assignment service:
+// a competitor in a slot/room, judged by a specific judge.
+model Assignment {
+  id               Int      @id @default(autoincrement())
+  eventId          Int
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  timeSlotId       Int
+  timeSlot         TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+  competitorUserId Int
+  competitor       User     @relation("AssignmentCompetitor", fields: [competitorUserId], references: [id], onDelete: Cascade)
+  judgeUserId      Int
+  judge            User     @relation("AssignmentJudge", fields: [judgeUserId], references: [id], onDelete: Cascade)
+  room             String
+
+  scores Score[]
+
+  @@index([eventId])
+  @@index([timeSlotId])
+  @@index([judgeUserId])
+}
+
+// One judge's score for one criterion of one assignment.
+model Score {
+  id            Int        @id @default(autoincrement())
+  assignmentId  Int
+  assignment    Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  judgeUserId   Int
+  judge         User       @relation(fields: [judgeUserId], references: [id], onDelete: Cascade)
+  criteriaName  String
+  score         Float
+  createdAt     DateTime   @default(now())
+
+  // One judge scores each criterion once per assignment.
+  @@unique([assignmentId, judgeUserId, criteriaName])
+  @@index([assignmentId])
+}
+
+// Aggregated result produced by the results service: a competitor's total and rank.
+model Result {
+  id              Int      @id @default(autoincrement())
+  eventId         Int
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  competitorUserId Int
+  competitor      User     @relation(fields: [competitorUserId], references: [id], onDelete: Cascade)
+  totalScore      Float
+  rank            Int
+
+  @@unique([eventId, competitorUserId])
+  @@index([eventId])
+}

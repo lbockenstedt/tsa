@@ -1,0 +1,13 @@
+node_modules
+dist
+src/client/dist
+.git
+.env
+.env.*
+*.log
+coverage
+azure
+.claude
+tests
+README.md
+*.md
