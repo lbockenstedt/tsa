@@ -54,7 +54,7 @@ What it does:
 1. Creates the resource group + an Azure Container Registry.
 2. Builds the image in Azure via `az acr build` (cloud build — no local Docker).
 3. Deploys `azure/container-app.bicep` (Container App + Postgres Flexible Server).
-4. The container runs `prisma migrate deploy` on boot, so the schema + seed apply automatically.
+4. The container runs `prisma db push` on boot, so the schema + seed apply automatically.
 
 Output: the app URL, DB host, and generated secrets.
 
@@ -81,7 +81,7 @@ What it does:
 1. Fetches the Debian 12 LXC template and creates the container (`pct create`).
 2. Pushes the app source + `lxc-setup.sh` into the container.
 3. Inside the container: installs Node 20 + PostgreSQL, creates the `tsa` DB,
-   `npm install`, `prisma migrate deploy`, `npm run build`, installs a `tsa`
+   `npm install`, `prisma db push`, `npm run build`, installs a `tsa`
    systemd service, and starts it.
 4. Prints `http://<container-ip>:3001`.
 

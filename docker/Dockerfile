@@ -37,5 +37,5 @@ COPY --from=build /app/dist ./dist
 ENV PORT=3001
 EXPOSE 3001
 
-# Apply migrations at startup, then start the server.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server/index.js"]
+# Push the schema to the DB at startup (no migration files yet), then start.
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/server/index.js"]

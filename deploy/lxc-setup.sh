@@ -55,10 +55,10 @@ log "Installing dependencies…"
 cd "$APP_DIR"
 npm install --omit=optional
 
-log "Generating Prisma client, applying migrations, seeding…"
+log "Generating Prisma client, pushing schema, seeding…"
 export DATABASE_URL
 npx prisma generate
-npx prisma migrate deploy
+npx prisma db push --accept-data-loss
 npm run prisma:seed || true
 
 log "Building the app (server + client)…"

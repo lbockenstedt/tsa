@@ -56,16 +56,21 @@ az deployment group create -g tsa-rg -f azure/container-app.bicep \
 
 The deployment outputs `appFqdn` (the container app URL) and `databaseHost`.
 
-## 4. Apply database migrations
+## 4. Apply the database schema
 
-The container runs `prisma migrate deploy` at startup, so the schema is applied
-automatically on first boot. If you need to run them manually:
+The container runs `prisma db push` at startup, so the schema is applied
+automatically on first boot. If you need to apply it manually:
 
 ```bash
 # From your machine, allow your IP through the firewall, then:
 DATABASE_URL="postgresql://tsaadmin:$DB_PASS@<databaseHost>:5432/tsadb?sslmode=require" \
-  npx prisma migrate deploy
+  npx prisma db push
 ```
+
+> Note: the deployers use `prisma db push` (no migration files committed yet).
+> Once you have a local Node environment, run `npx prisma migrate dev --name init`
+> to generate the first migration, commit `prisma/migrations/`, then switch the
+> deployers/Dockerfile back to `prisma migrate deploy` for versioned migrations.
 
 ## 5. Seed (optional)
 

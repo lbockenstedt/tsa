@@ -98,7 +98,7 @@ cat <<EOF
   ACR image:      $IMAGE
 
   Admin login:    admin@tsa.local / password
-  (seed runs automatically on first boot via prisma migrate deploy.
+  (schema is pushed on first boot via prisma db push; seed runs automatically.
    To reseed: see azure/README.md — set DATABASE_URL and run npm run prisma:seed)
 
   Generated secrets (save these):

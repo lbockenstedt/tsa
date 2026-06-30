@@ -88,7 +88,7 @@ export async function runResults(eventId: number): Promise<ResultOutput[]> {
   if (!event) throw new HttpError(404, 'Event not found');
   if (!event.rubric) throw new HttpError(400, 'Event has no rubric');
 
-  const criteria = event.rubric.criteria as RubricCriterion[];
+  const criteria = event.rubric.criteria as unknown as RubricCriterion[];
 
   const assignments = await prisma.assignment.findMany({
     where: { eventId },

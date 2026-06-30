@@ -33,7 +33,7 @@ scoreRouter.post('/', requireAuth, requireRole('JUDGE', 'ADMIN'), validateBody(s
     // Validate scores against the rubric's max scores.
     const event = await prisma.event.findUnique({ where: { id: assignment.eventId }, include: { rubric: true } });
     if (!event?.rubric) throw new HttpError(400, 'Event has no rubric');
-    const criteria = event.rubric.criteria as { name: string; maxScore: number; weight: number }[];
+    const criteria = event.rubric.criteria as unknown as { name: string; maxScore: number; weight: number }[];
     const byName = new Map(criteria.map((c) => [c.name, c]));
     for (const s of scores) {
       const criterion = byName.get(s.criteriaName);
