@@ -31,18 +31,19 @@ node --version
 npm --version
 
 log "Setting up local PostgreSQL database…"
-service postgresql start || pg_ctlcluster 16 main start || true
-sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 || \
-  sudo -u postgres psql -c "CREATE ROLE ${DB_USER} WITH LOGIN PASSWORD '${DB_PASS}';"
+service postgresql start || pg_ctlcluster 17 main start || pg_ctlcluster 16 main start || true
+# Create the role if missing, and ALWAYS (re)set its password so re-runs match
+# the DATABASE_URL we build below. Debian's default pg_hba allows 127.0.0.1 via
+# scram-sha-256, so no pg_hba edits are needed.
+if sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1; then
+  sudo -u postgres psql -c "ALTER ROLE ${DB_USER} WITH LOGIN PASSWORD '${DB_PASS}';" >/dev/null
+else
+  sudo -u postgres psql -c "CREATE ROLE ${DB_USER} WITH LOGIN PASSWORD '${DB_PASS}';" >/dev/null
+fi
 sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 || \
   sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};"
+sudo -u postgres psql -c "ALTER DATABASE ${DB_NAME} OWNER TO ${DB_USER};" >/dev/null
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" >/dev/null
-# Allow local TCP connections with a password.
-PG_HBA="$(find /etc/postgresql -name pg_hba.conf | head -n1)"
-if [ -n "$PG_HBA" ] && ! grep -q "tsa-md5" "$PG_HBA"; then
-  printf '\n# tsa-md5\nhost\ttsa\ttsa\t127.0.0.1/32\tmd5\n' >> "$PG_HBA"
-  pg_ctlcluster 16 main reload || service postgresql reload || true
-fi
 
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:5432/${DB_NAME}"
 
