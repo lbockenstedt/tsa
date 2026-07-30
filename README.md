@@ -4,6 +4,36 @@ SignupGenius-style event signup for a non-profit **student competition organizat
 
 Runs as a **single Azure container** (Node/TypeScript Express serving a React/Vite frontend) against **Azure Database for PostgreSQL**.
 
+<!-- INSTALLERS:START -->
+## Installation
+
+Every installer in this repo, with every flag and environment variable it accepts.
+Installers are idempotent — re-running one updates code and preserves credentials.
+
+### TSA — `install.sh`
+
+Clones the repo and runs one of the deploy scripts. No local Node or Docker
+needed: the Azure path builds in the cloud, the Proxmox path builds inside the LXC.
+
+```bash
+# Azure — Container App + Azure Database for PostgreSQL
+curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/install.sh | bash -s -- azure
+
+# Proxmox — self-contained LXC with bundled Postgres (run on the Proxmox host)
+curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/install.sh | bash -s -- proxmox
+```
+
+| Argument | Purpose |
+| :--- | :--- |
+| `azure` \| `proxmox` | Deployment target. Default `azure`. |
+
+Any environment variable you set is forwarded to the underlying deploy script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/install.sh | RESOURCE_GROUP=tsa-rg LOCATION=eastus bash -s -- azure
+```
+<!-- INSTALLERS:END -->
+
 ## Stack
 
 - **Backend:** Express + TypeScript, Prisma ORM, JWT cookie auth, bcrypt, zod validation, nodemailer.
