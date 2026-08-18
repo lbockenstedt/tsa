@@ -69,6 +69,8 @@ done
 [ -n "$IP" ] || err "Container did not get an IP via DHCP. Check your bridge / DHCP setup."
 
 log "Packaging the app and pushing it into the container…"
+# This archive is created in the system temp area; large checkouts need enough
+# temporary disk space for a compressed copy of the repository.
 TARBALL="$(mktemp -t tsa-app.XXXXXX.tar.gz)"
 tar -C "$REPO_DIR" --exclude=node_modules --exclude=dist --exclude=.git \
   --exclude=.env --exclude='*.log' -czf "$TARBALL" .

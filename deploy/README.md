@@ -70,6 +70,10 @@ Run **on the Proxmox host**:
 bash deploy/proxmox-lxc.sh
 ```
 
+The deploy script temporarily packs the checkout into a compressed tarball
+before pushing it into the container. Ensure the host temp filesystem has enough
+free space for a compressed copy of the repo, especially for large checkouts.
+
 Overrides:
 
 ```bash
