@@ -1,8 +1,84 @@
-# TSA
+# tsa — Technical Support Assistant (Lab Manager Module)
 
-SignupGenius-style event signup for a non-profit **student competition organization**. People sign up to **judge** or to **be judged** (compete). Built so the work that follows signups is automated: assigning competitors to slots/rooms, balancing judges across rooms, sending email notifications, and aggregating judge scores into ranked results.
+Technical Support Assistant (TSA) is an event coordination, scoring, and automated judge/competitor scheduling module for non-profit student competition organizations. Manages student competitor registrations, judge availability signups, capacity-constrained room and slot allocation, automated round-robin judge balancing, rubric-based evaluation scoring, real-time result ranking, and email notification dispatch.
 
-Runs as a **single Azure container** (Node/TypeScript Express serving a React/Vite frontend) against **Azure Database for PostgreSQL**.
+---
+
+## Architecture & Overview
+
+TSA is structured as a full-stack TypeScript application deployable as a single container or an LXC micro-appliance.
+
+```
+ +---------------------------------------------------------------+
+ |                   React / Vite Client (SPA)                   |
+ |  - Public event views & registration forms                    |
+ |  - Competitor slot selection & scheduling portal              |
+ |  - Judge scoring interface with dynamic rubric criteria       |
+ |  - Organizer administration, live results & ranking board     |
+ +---------------------------------------------------------------+
+                                 |
+                                 | HTTP / JSON REST API (Cookies / JWT)
+                                 v
+ +---------------------------------------------------------------+
+ |                 Node / Express Backend (src/server)           |
+ |  - Express application pipeline (`app.ts`, `index.ts`)        |
+ |  - JWT Cookie Session Authentication & Role Authorization     |
+ |  - Zod request body validation & error handling middleware    |
+ |  - Core Automation Services:                                  |
+ |      * `assignment.service.ts` — Room & judge balancing engine |
+ |      * `results.service.ts`    — Weighted scoring & ranking   |
+ |      * `notification.service.ts` — Nodemailer SMTP alerts     |
+ +---------------------------------------------------------------+
+                                 |
+                                 | Prisma ORM (`schema.prisma`)
+                                 v
+ +---------------------------------------------------------------+
+ |                      PostgreSQL Database                      |
+ |  (Users, Events, Rubrics, TimeSlots, Signups, Assignments,    |
+ |   Scores, Rankings)                                           |
+ +---------------------------------------------------------------+
+```
+
+### Deployment Topologies
+
+1. **Azure Container App + Azure Database for PostgreSQL (Cloud Architecture):**
+   - Packaged via multi-stage `Dockerfile`.
+   - Express server serves API endpoints under `/api` and delivers the compiled React frontend SPA static bundle from `dist/client/`.
+   - Managed PostgreSQL Flexible Server handles relational data with automated backups and SSL connections.
+   - Orchestrated via Azure Bicep template (`azure/container-app.bicep`).
+2. **Proxmox LXC (On-Premises / Lab Infrastructure):**
+   - Self-contained Debian 12 LXC container provisioned via `deploy/proxmox-lxc.sh`.
+   - Bundles local PostgreSQL and NodeJS runtime under `systemd` supervision.
+   - Provides private, zero-cloud operations within internal lab environments.
+
+---
+
+## Features
+
+- **Student Competition & Event Management:**
+  - Create and configure multi-day events with rich descriptions, physical or virtual room locations, and automated registration deadlines.
+  - Multi-role access control for Administrators, Judges, Competitors (Students), and Check-in Volunteers.
+- **Competitor Registration & Time Slot Selection:**
+  - Self-service competitor signups with preferred time-slot reservations.
+  - Hard capacity limits per time slot and room to eliminate overbooking.
+- **Judge Availability Signups & Balancing Algorithms:**
+  - Fast volunteer judge onboarding and availability tracking.
+  - Automated auto-assignment engine (`placeCompetitors` & `balanceJudges`):
+    * Fills time slots chronologically while honoring competitor preferences.
+    * Balances volunteer judges round-robin across rooms to maintain uniform evaluation panel sizes (default 3 judges per room).
+- **Rubric-Based Scoring Pipelines & Results Aggregation:**
+  - Dynamic rubric definition with configurable criteria, point maximums, and proportional percentage weights.
+  - In-app evaluation portal where assigned judges submit numeric marks per criterion.
+  - Weighted results aggregation algorithm (`aggregateResults`):
+    * Averages marks across all evaluating judges per criterion.
+    * Computes final weighted composite scores.
+    * Resolves ranks dynamically with deterministic tie handling.
+- **Automated Notification Dispatch:**
+  - Event lifecycle alerts via Nodemailer SMTP.
+  - Dispatches immediate confirmations upon signup, schedule announcements after room balancing, and finalized result publication.
+  - Graceful dev-mode fallback to console logging when SMTP is unconfigured.
+
+---
 
 <!-- INSTALLERS:START -->
 ## Installation
@@ -34,102 +110,48 @@ curl -fsSL https://raw.githubusercontent.com/lbockenstedt/tsa/main/install.sh | 
 ```
 <!-- INSTALLERS:END -->
 
-## Stack
+---
 
-- **Backend:** Express + TypeScript, Prisma ORM, JWT cookie auth, bcrypt, zod validation, nodemailer.
-- **Frontend:** React + Vite (built to static assets and served by Express in production).
-- **Database:** PostgreSQL (Azure Database for PostgreSQL Flexible Server in prod; local Postgres in dev).
-- **Tests:** Vitest.
-- **Infra:** Dockerfile + Azure Container Apps (Bicep).
+## Local Development & Operations
 
-## Roles
+### Prerequisites
 
-- **Admin / organizer** — create & manage events, close signups, run auto-assignment, view/export results.
-- **Judge** — sign up to judge, view assigned rooms/competitors, enter scores.
-- **Competitor / student** — sign up to compete, pick a time slot, view assignment and results.
-- **Check-in volunteer** — role exists in the schema; day-of UI is deferred.
+- Node.js (v18+) and npm
+- PostgreSQL database instance
 
-## Quick start (local dev)
+### Quick Start
 
-1. **Install dependencies**
+1. **Install dependencies:**
    ```bash
    npm install
    ```
-2. **Configure environment**
+2. **Configure environment:**
    ```bash
    cp .env.example .env
-   # edit .env: set DATABASE_URL, JWT_SECRET, and SMTP_* if you want email
+   # Edit .env with DATABASE_URL, JWT_SECRET, and SMTP credentials
    ```
-3. **Set up the database**
+3. **Database migrations and seeding:**
    ```bash
    npx prisma migrate dev --name init
    npm run prisma:seed
    ```
-   Seed creates an admin user (`admin@tsa.local` / `password`) and a sample event.
-4. **Run the app**
+   *Seed script creates default admin user (`admin@tsa.local` / `password`) and sample competition data.*
+4. **Start local development servers:**
    ```bash
    npm run dev
    ```
-   - Frontend (Vite): http://localhost:5173
-   - API (Express): http://localhost:3001  (Vite proxies `/api` here)
+   - Vite frontend: `http://localhost:5173`
+   - Express API backend: `http://localhost:3001` (proxied by Vite)
 
-## Scripts
+### NPM Scripts Reference
 
-| Script | What it does |
-| --- | --- |
-| `npm run dev` | Run Express (watch) + Vite dev server concurrently |
-| `npm run build` | Compile server (`tsc`) and build client (`vite build`) |
-| `npm start` | Run the compiled server (`node dist/server/index.js`) — serves the client too |
-| `npm test` | Run Vitest test suite |
-| `npm run typecheck` | Type-check server and client without emitting |
-| `npm run prisma:migrate` | Create/apply a dev migration |
-| `npm run prisma:deploy` | Apply migrations in production |
-| `npm run prisma:seed` | Seed the database |
-
-## Project layout
-
-```
-prisma/            # schema.prisma + seed.ts
-src/server/        # Express API, auth, routes, automation services
-src/client/        # React app (Vite)
-tests/server/      # Vitest unit + integration tests
-docker/            # Dockerfile (multi-stage, single container)
-azure/             # container-app.bicep + deploy guide
-```
-
-## The end-to-end flow
-
-1. **Admin** creates an event with a rubric (scored criteria) and time slots (rooms + capacity).
-2. **Competitors** sign up and pick a slot; **judges** sign up to judge.
-3. **Admin** closes signups and runs **auto-assignment** — competitors distributed across slots/rooms (capacity-respecting), judges balanced round-robin across rooms.
-4. **Judges** enter rubric scores for their assigned competitors.
-5. **Results** aggregate scores (averaged across judges, weighted by rubric) into rankings.
-6. Email notifications fire at signup, assignment, and results time (when SMTP is configured).
-
-## Deploy
-
-Two single-command installers live in [`deploy/`](deploy/README.md). Neither
-requires local Node or Docker — everything is built in the cloud / inside the
-container.
-
-**Azure (one line):**
-```bash
-bash deploy/azure.sh
-```
-Builds the image in Azure Container Registry and deploys an Azure Container App
-+ Azure Database for PostgreSQL via Bicep. See [`azure/README.md`](azure/README.md)
-for the manual equivalent.
-
-**Proxmox LXC (one line, self-contained):**
-```bash
-bash deploy/proxmox-lxc.sh
-```
-Creates a Debian 12 LXC on a Proxmox host with Node + PostgreSQL bundled inside,
-builds the app, and runs it under systemd. No Azure or external DB needed.
-
-## Status / out of scope (for now)
-
-- Check-in volunteer day-of UI (role modeled, UI deferred).
-- Cron-scheduled reminder emails (notification service is ready; scheduler deferred).
-- Client-side DOM tests (added once UI stabilizes).
-- Password-reset email flow, multi-tenant org support.
+| Script | Purpose |
+| :--- | :--- |
+| `npm run dev` | Runs Express backend and Vite frontend concurrently in watch mode. |
+| `npm run build` | Compiles server via `tsc` and builds production client assets via `vite build`. |
+| `npm start` | Launches compiled production server from `dist/server/index.js`. |
+| `npm test` | Executes Vitest test suite. |
+| `npm run typecheck` | Validates TypeScript types across both server and client without emitting files. |
+| `npm run prisma:migrate` | Applies development migrations via Prisma. |
+| `npm run prisma:deploy` | Applies pending database migrations in production environments. |
+| `npm run prisma:seed` | Populates database with initial seed fixtures. |
