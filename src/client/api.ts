@@ -27,8 +27,13 @@ export async function api<T = unknown>(
   return res.json() as Promise<T>;
 }
 
+/** Perform an authenticated HTTP GET request against the API. */
 export const apiGet = <T = unknown>(path: string) => api<T>(path);
+
+/** Perform an authenticated HTTP POST request with JSON payload. */
 export const apiPost = <T = unknown>(path: string, body?: unknown) =>
   api<T>(path, { method: 'POST', body: body !== undefined ? JSON.stringify(body) : undefined });
+
+/** Perform an authenticated HTTP PATCH request with JSON payload. */
 export const apiPatch = <T = unknown>(path: string, body?: unknown) =>
   api<T>(path, { method: 'PATCH', body: body !== undefined ? JSON.stringify(body) : undefined });
