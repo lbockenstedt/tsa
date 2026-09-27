@@ -224,6 +224,7 @@ jobs:
           # after the first approval leaves the later one parked and the PR
           # blocked on a required check that never reports.
           approved=""
+          failed=""
           quiet=0
           for _ in $(seq 1 24); do
             ids=$(gh api "repos/${{ github.repository }}/actions/runs?branch=$BR&status=action_required" \
@@ -232,10 +233,18 @@ jobs:
             for id in $ids; do
               case " $approved " in *" $id "*) continue ;; esac
               echo "approving parked run $id"
-              gh api -X POST "repos/${{ github.repository }}/actions/runs/$id/approve" || \
-                echo "::warning::could not approve run $id -- approve it by hand to unblock this PR"
-              approved="$approved $id"
-              new="$new $id"
+              # Only a SUCCESSFUL approve records the id. A failed POST leaves
+              # the run parked, so it must stay retryable on a later poll and
+              # must not count as a quiet poll or be reported as released.
+              if gh api -X POST "repos/${{ github.repository }}/actions/runs/$id/approve"; then
+                approved="$approved $id"
+                new="$new $id"
+                case " $failed " in *" $id "*) failed="$(printf '%s' " $failed " | sed "s/ $id / /g")" ;; esac
+              else
+                echo "::warning::could not approve run $id -- will retry; approve it by hand if this PR stays blocked"
+                case " $failed " in *" $id "*) ;; *) failed="$failed $id" ;; esac
+                new="$new $id"
+              fi
             done
             if [ -n "$approved" ] && [ -z "$new" ]; then
               quiet=$((quiet + 1))
@@ -245,10 +254,14 @@ jobs:
             fi
             sleep 5
           done
+          failed="$(printf '%s' "$failed" | tr -s ' ' | sed 's/^ //; s/ $//')"
           if [ -n "$approved" ]; then
             echo "::notice::released parked run(s):$approved"
-          else
+          elif [ -z "$failed" ]; then
             echo "::notice::no parked run found for $BR @ $SHA"
+          fi
+          if [ -n "$failed" ]; then
+            echo "::warning::still parked after every retry (approve by hand to unblock this PR): $failed"
           fi
 
       # Merge it. The gap only actually closes when the PR lands, and a queue
