@@ -110,6 +110,7 @@ jobs:
           # matches no trigger in this workflow or in backmerge.yml. The loop is
           # therefore closed by the trigger filter, not by the token's weakness.
           token: ${{ secrets.WORKFLOW_TOKEN || secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Resolve source and target
         id: route
