@@ -4,6 +4,26 @@ Technical Support Assistant (TSA) is an event coordination, scoring, and automat
 
 ---
 
+## Repository layout
+
+| Path | What it holds |
+| :--- | :--- |
+| `.claude/` | Fleet-owned skills, synced from lm; edit them in lm. |
+| `.github/` | CI (`workflows/ci.yml`), the thin `promote`/`backmerge` callers, promotion scripts and fleet-owned agents. |
+| `azure/` | Azure Container App template. |
+| `deploy/` | Deployment scripts (Azure, Proxmox LXC). |
+| `docker/` | Container build. |
+| `prisma/` | Database schema and seed data. |
+| `src/` | The TypeScript app: `server/` (API) and the client. |
+| `tests/` | vitest suite; CI runs it in the `test` job after a typecheck. |
+| `.env.example` | Template for the `.env` the installer writes (the real `.env` is never committed). |
+| `AGENTS.md` | Orientation for people and AI agents; the fleet rules block is synced from lm. |
+| `install.sh` | Installer (idempotent; safe to re-run). |
+| `package.json` | Node dependencies and the npm scripts (`test`, `typecheck`, `build`, ...). |
+| `README.md` | This file. |
+| `tsconfig.json` | TypeScript settings (`tsconfig.server.json` and `tsconfig.client.json` per side). |
+| `vite.config.ts` | Vite (client build) and vitest settings (`vitest.config.ts`). |
+
 ## Architecture & Overview
 
 TSA is structured as a full-stack TypeScript application deployable as a single container or an LXC micro-appliance.
